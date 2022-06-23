@@ -1,0 +1,2 @@
+# ernie_part_to_torch
+ernie模型看起来不错，但是只能用在paddle，懒狗就想试试能不能暴力转torch
