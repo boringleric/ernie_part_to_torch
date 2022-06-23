@@ -22,4 +22,4 @@ paddle_sequence_output, paddle_pooled_output = paddle_model(**paddle_encoding)
 torch_out_to_np = torch_output['pooler_output'].detach().numpy()
 sim_score = cosine_similarity(paddle_pooled_output, torch_out_to_np)
 
-print(sim_score)
+print(sim_score) # 1

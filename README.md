@@ -3,11 +3,26 @@ ernie模型看起来不错，但是只能用在paddle，懒狗就想试试能不
 
 转换方式参考了https://github.com/nghuyong/ERNIE-Pytorch 的项目，感谢！
 
-# ernie_gram转换的一些问题
+# 转换的基础环境
 
-贴上一个转换完成的模型地址：https://drive.google.com/file/d/1fFvYHSYr6G9Qu1Wx1LT9kYHkofjhPXzn/ 
+python 3.9.13 
+paddlepaddle-gpu 2.3.0 
+pytorch 1.11.0
+cudatoolkit 10.2.89
+
+# ernie_gram 转换的一些问题
+
+贴上一个转换完成的模型地址：https://drive.google.com/file/d/1jMqN6UmTIQWx9S61jB5-YVGQ-njT2a2O
 
 1. 由于ernie_gram和bert的结构一致，所以直接使用了transformers的bert结构作为迁移对象，迁移后的模型可以直接使用transformers进行调用。
 2. 使用转换的代码生成的config.json里面没有model_type字段，所以AutoModel会报错，在config.json里面加上 "model_type": "bert",就好了。
 3. 为什么ernie_gram无法预测BertForMaskedLM任务，因为ernie_gram的原版模型里面没有cls层的权重，而BertForMaskedLM任务需要使用到cls层权重，默认初始化的权重显然不足以完成Mask的预测。
+4. 调用方式和验证向量一致性在ernie_gram_torch_paddle_sim_check.py。
 
+# ernie3 转换的一些问题
+
+贴上一个转换完成的模型地址：https://drive.google.com/file/d/1qPx-3XCRuO7R8Nxtn7Qrcoe5iFczUvya/
+
+1. ernie3和bert的结构并不一致，ernie3的embedding层多了task_type_embeddings，所以照搬的话在向量一致性核查上面肯定不会通过，因此借鉴了PaddleNLP的Ernie3代码，魔改一番，至少目前转换的向量一致性和MaskLM预测任务没有问题。
+2. 魔改的代码里面，pretrained相关部分没有做验证，可能会有错误！后续考虑完善吧...
+3. 调用方式和验证向量一致性和MaskLM任务在ernie_3_torch_paddle_check.py。
