@@ -1087,7 +1087,7 @@ class ErnieForQuestionAnswering(ErniePretrainedModel):
         logits = self.classifier(sequence_output)
         logits = logits.permute([2, 0, 1])
         start_logits, end_logits = torch.unbind(x=logits, axis=0)
-        
+
         return start_logits, end_logits
 
 
@@ -1511,3 +1511,79 @@ class ErnieForMultipleChoice(ErniePretrainedModel):
         #reshaped_logits = logits.view(-1, self.num_choices) # logits: (bs, num_choice)
 
         return logits
+
+
+
+class ErnieForUIETask(ErniePretrainedModel):
+    r"""
+    Ernie Model with a linear layer on top of the output layer,
+    designed for sequence classification/regression tasks like GLUE tasks.
+
+    Args:
+        ernie (ErnieModel): 
+            An instance of `paddlenlp.transformers.ErnieModel`.
+        num_classes (int, optional): 
+            The number of classes. Default to `2`.
+        dropout (float, optional): 
+            The dropout probability for output of ERNIE. 
+            If None, use the same value as `hidden_dropout_prob` 
+            of `paddlenlp.transformers.ErnieModel` instance. Defaults to `None`.
+    """
+
+    def __init__(self, config, dropout=None):
+        super(ErnieForUIETask, self).__init__(config)
+        self.ernie = ErnieModel(config)  # allow ernie to be config
+        self.linear_start = nn.Linear(self.ernie.config.hidden_size, 1)
+        self.linear_end = nn.Linear(self.ernie.config.hidden_size, 1)
+        self.sigmoid = nn.Sigmoid()
+        self.apply(self.init_weights)
+
+    def forward(self,
+                input_ids,
+                token_type_ids=None,
+                position_ids=None,
+                attention_mask=None):
+        r"""
+        Args:
+            input_ids (Tensor):
+                See :class:`ErnieModel`.
+            token_type_ids (Tensor, optional):
+                See :class:`ErnieModel`.
+            position_ids (Tensor, optional):
+                See :class:`ErnieModel`.
+            attention_mask (Tensor, optional):
+                See :class:`ErnieModel`.
+
+        Returns:
+            Tensor: Returns tensor `logits`, a tensor of the input text classification logits.
+            Shape as `[batch_size, num_classes]` and dtype as float32.
+
+        Example:
+            .. code-block::
+
+                import paddle
+                from paddlenlp.transformers import ErnieForSequenceClassification, ErnieTokenizer
+
+                tokenizer = ErnieTokenizer.from_pretrained('ernie-1.0')
+                model = ErnieForSequenceClassification.from_pretrained('ernie-1.0')
+
+                inputs = tokenizer("Welcome to use PaddlePaddle and PaddleNLP!")
+                inputs = {k:paddle.to_tensor([v]) for (k, v) in inputs.items()}
+                logits = model(**inputs)
+
+        """
+        output = self.ernie(
+            input_ids,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            attention_mask=attention_mask)
+
+        start_logits = self.linear_start(output.last_hidden_state)
+        start_logits = torch.squeeze(start_logits, -1)
+        start_prob = self.sigmoid(start_logits)
+        end_logits = self.linear_end(output.last_hidden_state)
+        end_logits = torch.squeeze(end_logits, -1)
+        end_prob = self.sigmoid(end_logits)
+
+        return start_prob, end_prob
+        
