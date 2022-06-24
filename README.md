@@ -30,6 +30,7 @@ cudatoolkit 10.2.89
 # UIE模型的一个尝试
 
 贴上一个转换完成的模型地址：https://drive.google.com/file/d/1cp81I0iqA3aoWWBuQ4YxBUVJww58Sz6U/
+
 UIE是paddlenlp做的一个比较有意思的论文，采用prompt训练方式基于ernie3模型做的一套通用信息抽取框架，通过改变不同的任务schema，可以完成实体抽取、关系抽取、事件抽取、情感分析等任务，很值得玩一下。
 论文见https://arxiv.org/pdf/2203.12277.pdf
 
